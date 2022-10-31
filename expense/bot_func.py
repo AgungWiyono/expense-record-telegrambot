@@ -1,4 +1,5 @@
 import io
+import os
 from datetime import datetime
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -23,6 +24,7 @@ def create_record(data: dict):
     record = models.Expense(**data)
     record.receipt = image_buffer
     record.save()
+    os.remove(imagepath)
 
 
 def start_input(update: Update, context: CallbackContext) -> int:
