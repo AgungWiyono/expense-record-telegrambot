@@ -135,17 +135,16 @@ def receipt_processor(update: Update, context: CallbackContext) -> int:
     photo_file.download(photopath)
     user_data["expense"]["photo"] = photopath
     create_record(user_data["expense"])
+    del user_data["expense"]
     message.reply_text("Data has been saved.")
     return ConversationHandler.END
 
 
 def cancel_input(update: Update, context: CallbackContext) -> int:
-    print(context.user_data)
     user_data = context.user_data
     if not user_data:
         return 0
     del user_data["expense"]
-    print(context.user_data)
 
     message = update.message
     if not message:

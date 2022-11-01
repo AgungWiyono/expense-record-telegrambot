@@ -21,6 +21,7 @@ class Command(BaseCommand):
 
         register_handler(dispatcher, "core.urls")
         register_handler(dispatcher, "expense.urls")
+        register_handler(dispatcher, "report.urls")
 
         updater.start_polling()
         updater.idle()
