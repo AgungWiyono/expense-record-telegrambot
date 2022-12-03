@@ -16,7 +16,7 @@ class Expense(models.Model):
     title = models.CharField(max_length=64)
     category = models.ForeignKey(ExpenseCategory, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=16, decimal_places=2)
-    receipt = models.ImageField()
+    receipt = models.ImageField(upload_to="expense/")
     note = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

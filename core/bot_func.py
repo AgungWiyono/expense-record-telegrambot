@@ -5,6 +5,7 @@ from telegram.ext import CallbackContext
 
 
 def start(update: Update, context: CallbackContext):
+    print("Test")
     chat: Optional[Chat] = update.effective_chat
     if not chat:
         return

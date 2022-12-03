@@ -18,6 +18,7 @@ conv_handler = ConversationHandler(
         bot_func.RECEIPT: [
             MessageHandler(Filters.photo, bot_func.receipt_processor)
         ],
+        bot_func.NOTE: [MessageHandler(text_filter, bot_func.note_processor)],
     },
     fallbacks=[CommandHandler("cancel", bot_func.cancel_input)],
 )

@@ -19,9 +19,11 @@ class Command(BaseCommand):
         updater = Updater(token=TOKEN, use_context=True)
         dispatcher = updater.dispatcher
 
+        print("Registering function.")
         register_handler(dispatcher, "core.urls")
         register_handler(dispatcher, "expense.urls")
         register_handler(dispatcher, "report.urls")
 
+        print("Start polling.")
         updater.start_polling()
         updater.idle()

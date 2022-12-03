@@ -1,6 +1,5 @@
 import io
 import os
-from datetime import datetime
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from telegram import ReplyKeyboardMarkup, Update
@@ -8,17 +7,18 @@ from telegram.ext import CallbackContext, ConversationHandler
 
 from expense import models
 
-NAME, CATEGORY, AMOUNT, RECEIPT = range(4)
+NAME, CATEGORY, AMOUNT, RECEIPT, NOTE = range(5)
 
 
 def create_record(data: dict):
     imagepath: str = data.pop("photo")
     filename = imagepath.split("/")[-1]
+    ext = filename.split(".")[1]
     with open(imagepath, "rb") as fp:
         imagebyte = fp.read()
     buffer = io.BytesIO(imagebyte)
     image_buffer = InMemoryUploadedFile(
-        buffer, None, filename, "image/png", len(imagebyte), None
+        buffer, None, filename, f"image/{ext}", len(imagebyte), None
     )
 
     record = models.Expense(**data)
@@ -32,8 +32,7 @@ def start_input(update: Update, context: CallbackContext) -> int:
     if not message:
         return ConversationHandler.END
     message.reply_text(
-        "Enter the name of the new expense."
-        "\nType /cancel to abort operation."
+        "Masukkan nama pengeluaran.\nKetikkan /cancel untuk membatalkan."
     )
     return NAME
 
@@ -68,7 +67,7 @@ def name_processor(update: Update, context: CallbackContext) -> int:
     user_data["expense"]["title"] = name
 
     markup = compose_category_choice()
-    message.reply_text("Enter expense type: ", reply_markup=markup)
+    message.reply_text("Pilih jenis pengeluaran: ", reply_markup=markup)
 
     return CATEGORY
 
@@ -83,7 +82,7 @@ def category_processor(update: Update, context: CallbackContext) -> int:
     if not category:
         markup = compose_category_choice()
         message.reply_text(
-            "Category is not valid. Please choose from one below.",
+            "Kategori tidak tersedia.Silakan pilih dari yang ada dibawah ini.",
             reply_markup=markup,
         )
         return CATEGORY
@@ -93,7 +92,7 @@ def category_processor(update: Update, context: CallbackContext) -> int:
         return 0
     user_data["expense"]["category_id"] = category.id
 
-    message.reply_text("Enter the amount: ")
+    message.reply_text("Masukkan jumlah pengeluaran: ")
 
     return AMOUNT
 
@@ -109,7 +108,7 @@ def amount_processor(update: Update, context: CallbackContext) -> int:
         return 0
     user_data["expense"]["amount"] = text
 
-    message.reply_text("Send the receipt: ")
+    message.reply_text("Kirimkan resi atau nota: ")
 
     return RECEIPT
 
@@ -129,14 +128,36 @@ def receipt_processor(update: Update, context: CallbackContext) -> int:
     if not user_data:
         return 0
 
-    photoname = str(int(datetime.now().timestamp()))
-    photopath = f"/tmp/{photoname}.png"
     photo_file = photo[-1].get_file()
-    photo_file.download(photopath)
-    user_data["expense"]["photo"] = photopath
+    photo_file.download()
+    photopath = photo_file.file_path
+    if not photopath:
+        message.reply_text("Photo tidak dapat diterima.")
+        message.reply_text("Silakan upload ulang!")
+        return RECEIPT
+    user_data["expense"]["photo"] = photopath.split("/")[-1]
+
+    message.reply_text("Silahkan masukkan catatan: ")
+    return NOTE
+
+
+def note_processor(update: Update, context: CallbackContext) -> int:
+    message = update.message
+    if not message:
+        return ConversationHandler.END
+    if not message.from_user:
+        return ConversationHandler.END
+    text = message.text
+
+    user_data = context.user_data
+    if not user_data:
+        return 0
+
+    user_data["expense"]["note"] = text
+
     create_record(user_data["expense"])
     del user_data["expense"]
-    message.reply_text("Data has been saved.")
+    message.reply_text("Data telah tersimpan.")
     return ConversationHandler.END
 
 
@@ -150,5 +171,5 @@ def cancel_input(update: Update, context: CallbackContext) -> int:
     if not message:
         return ConversationHandler.END
 
-    message.reply_text("You've cancelled input process.")
+    message.reply_text("Proses input berhasil dibatalkan.")
     return ConversationHandler.END
