@@ -67,7 +67,13 @@ def name_processor(update: Update, context: CallbackContext) -> int:
     user_data["expense"]["title"] = name
 
     markup = compose_category_choice()
-    message.reply_text("Pilih jenis pengeluaran: ", reply_markup=markup)
+    choice_text = (
+        "Silakan pilih kategori pengeluaran.\n"
+        "Jika tidak tersedia silakan batalkan input saat ini dengan /cancel"
+        "kemudian buat kategori baru pada situs "
+        "https://expensebot.sandboxindonesia.id/admin."
+    )
+    message.reply_text(choice_text, reply_markup=markup)
 
     return CATEGORY
 
@@ -92,7 +98,7 @@ def category_processor(update: Update, context: CallbackContext) -> int:
         return 0
     user_data["expense"]["category_id"] = category.id
 
-    message.reply_text("Masukkan jumlah pengeluaran: ")
+    message.reply_text("Masukkan jumlah pengeluaran (hanya angka): ")
 
     return AMOUNT
 
@@ -102,13 +108,23 @@ def amount_processor(update: Update, context: CallbackContext) -> int:
     if not message:
         return ConversationHandler.END
     text = message.text
+    if not text:
+        message.reply_text("Tidak ada angka diterima.")
+        return AMOUNT
+    if not text.isdigit():
+        message.reply_text("Hanya menerima input angka.")
+        return AMOUNT
 
     user_data = context.user_data
     if not user_data:
         return 0
     user_data["expense"]["amount"] = text
 
-    message.reply_text("Kirimkan resi atau nota: ")
+    receipt_text = (
+        "Kirimkan resi atau nota dalam bentuk gambar."
+        "Jika menggunakan telegram non-mobile, centang opsi kompres gambar."
+    )
+    message.reply_text(receipt_text)
 
     return RECEIPT
 
